@@ -156,8 +156,7 @@ do_run_lopper() {
     fi
 }
 
-SOC_FAMILY_ARCH:linux ??= "${TUNE_PKGARCH}"
-PACKAGE_ARCH:linux = "${SOC_FAMILY_ARCH}"
+PACKAGE_ARCH:linux = "${MACHINE_ARCH}"
 
 COMPATIBLE_HOST:linux = ".*"
 COMPATIBLE_HOST:xilinx-standalone = ".*-elf"
