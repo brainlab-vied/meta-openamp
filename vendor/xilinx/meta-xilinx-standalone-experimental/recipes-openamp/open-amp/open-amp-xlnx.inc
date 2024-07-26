@@ -1,4 +1,4 @@
-PROVIDES:armv7r = " open-amp open-amp-xlnx "
+PROVIDES:armv7r:xilinx-standalone = " open-amp open-amp-xlnx "
 RPROVIDES:${PN} += "open-amp"
 RPROVIDES:${PN}-demos += "open-amp-demos"
 
@@ -7,14 +7,14 @@ inherit ccmake cmake python3-dir deploy
 LOPS_DIR="${RECIPE_SYSROOT_NATIVE}/${PYTHON_SITEPACKAGES_DIR}/lopper/lops/"
 OPENAMP_DTFILE ?= "${SYSTEM_DTFILE}"
 
+EXTRA_OECMAKE:append = " -DYOCTO=ON "
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 
 OECMAKE_SOURCEPATH = "${S}/"
 
 DEPENDS:append = " libmetal python3-pyyaml-native lopper-native python3-dtc-native "
-DEPENDS:append:armv7r = " xiltimer libxil scugic xilstandalone xiltimer  nativesdk-xilinx-lops "
-DEPENDS:append:xilinx-freertos = " freertos10-xilinx "
+DEPENDS:xilinx-standalone:append = " xiltimer libxil scugic xilstandalone xiltimer  nativesdk-xilinx-lops "
 
 OPENAMP_WITH_PROXY ?= "OFF"
 
@@ -26,27 +26,14 @@ OPENAMP_OVERLAY_DEFAULT:versal-net ??= "openamp-overlay-versal-net.yaml"
 OPENAMP_OVERLAY ?= "${OPENAMP_OVERLAY_DEFAULT}"
 SRC_URI:append = "  file://${OPENAMP_OVERLAY} "
 
-OECMAKE_C_LINK_FLAGS:append:armv7r = " --sysroot=${STAGING_DIR_HOST} -lxil -lc -lm -lxilstandalone -lscugic -lxiltimer"
+OECMAKE_C_LINK_FLAGS:xilinx-standalone:append = " --sysroot=${STAGING_DIR_HOST} "
 CFLAGS:append = " -DSDT -D_AMD_GENERATED_ ${DEBUG_PREFIX_MAP} "
-CFLAGS:append:armv7r = " -O3  -DXLNX_PLATFORM \
+CFLAGS:xilinx-standalone:append = " -O3  -DXLNX_PLATFORM \
  -specs=${PKG_CONFIG_SYSROOT_DIR}/usr/include/Xilinx.spec \
  "
-CFLAGS:append:xilinx-freertos = " -DUSE_FREERTOS "
 
 DEMO_LINK_FLAGS ?= ""
-DEMO_LINK_FLAGS:armv7r = "-lxil -lc -lm -lxilstandalone -lscugic -lxiltimer"
-DEMO_LINK_FLAGS:append:xilinx-freertos = " -lfreertos"
-
-OPENAMP_CMAKE_SOC = "unknown"
-OPENAMP_CMAKE_SOC:zynqmp = "ZYNQMP"
-OPENAMP_CMAKE_SOC:versal = "VERSAL"
-OPENAMP_CMAKE_SOC:versal-net = "VERSAL_NET"
-
-OPENAMP_CMAKE_SYSTEM_NAME = "unknown"
-OPENAMP_CMAKE_SYSTEM_NAME:xilinx-standalone = "Generic"
-OPENAMP_CMAKE_SYSTEM_NAME:xilinx-freertos = "FreeRTOS"
-
-LINKER_METADATA_FILE="OpenAMP_Lopper_Linker_Cfg.cmake"
+DEMO_LINK_FLAGS:armv7r = " -lxilstandalone -lscugic -lxiltimer"
 
 cmake_do_generate_toolchain_file:append:armv7r() {
     cat >> ${WORKDIR}/toolchain.cmake <<EOF
@@ -54,11 +41,12 @@ cmake_do_generate_toolchain_file:append:armv7r() {
 	CMAKE_FORCE_C_COMPILER("${OECMAKE_C_COMPILER}" GNU)
 	set (CMAKE_SYSTEM_PROCESSOR "${TRANSLATED_TARGET_ARCH}" )
 	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ")
-	set (CMAKE_SYSTEM_NAME "${OPENAMP_CMAKE_SYSTEM_NAME}")
+	set (CMAKE_SYSTEM_NAME "Generic")
 	set (MACHINE               "zynqmp_r5" )
+	set (CMAKE_MACHINE         "${OPENAMP_CMAKE_MACHINE}" )
 	set (CMAKE_LIBRARY_PATH    "${PKG_CONFIG_SYSROOT_DIR}/usr/lib" CACHE STRING "")
 	set (CMAKE_INCLUDE_PATH    "${CMAKE_INCLUDE_PATH} ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
-	set (CMAKE_FIND_ROOT_PATH "${CMAKE_FIND_ROOT_PATH} ${STAGING_LIBDIR} ${CMAKE_INCLUDE_PATH} " CACHE STRING "")
+	set (CMAKE_FIND_ROOT_PATH "${CMAKE_FIND_ROOT_PATH} ${STAGING_LIBDIR} " CACHE STRING "")
 	set (LIBMETAL_INCLUDE_DIR  " ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
 	set (LIBMETAL_LIB_DIR      " ${PKG_CONFIG_SYSROOT_DIR}/usr/lib" CACHE STRING "")
 	set (XIL_INCLUDE_DIR       " ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
@@ -66,23 +54,17 @@ cmake_do_generate_toolchain_file:append:armv7r() {
 	set (DEMO_LINK_FLAGS       "${DEMO_LINK_FLAGS}" CACHE STRING "")
 	set (WITH_PROXY            "${OPENAMP_WITH_PROXY}" CACHE STRING "")
 
-	set_property (GLOBAL PROPERTY HAS_SYSTEM_DT ON)
-	set_property(GLOBAL PROPERTY SOC "${OPENAMP_CMAKE_SOC}")
-	set_property(GLOBAL PROPERTY LINKER_METADATA_FILE ${S}/${LINKER_METADATA_FILE})
 EOF
 }
 
-# Generate Lopper linker config file before generating toolchain file
-do_generate_toolchain_file[prefuncs] += "do_run_lopper"
-
 do_generate_toolchain_file[postfuncs] += "openamp_toolchain_file_setup"
 LOPPER_GEN_FILE_OUTPUT:linux = "zynqmp"
-LOPPER_GEN_FILE_OUTPUT:armv7r = "zynqmp_r5"
+LOPPER_GEN_FILE_OUTPUT:xilinx-standalone = "zynqmp_r5"
 openamp_toolchain_file_setup() {
   cp ${WORKDIR}/amd_platform_info.h ${S}/apps/machine/${LOPPER_GEN_FILE_OUTPUT}
 }
 
-OPENAMP_LOPPER_INPUTS:armv7r = ""
+OPENAMP_LOPPER_INPUTS:xilinx-standalone = " -i ${LOPS_DIR}/lop-r5-imux.dts "
 OPENAMP_LOPPER_INPUTS:linux:zynqmp = "            \
     -i ${LOPS_DIR}/lop-gen_domain_dts-invoke.dts  \
     -i ${LOPS_DIR}/lop-a53-imux.dts "
@@ -127,9 +109,9 @@ OPENAMP_LOPPER_OUTPUT[psx_cortexr52_2] = "r52_2"
 OPENAMP_LOPPER_OUTPUT[psx_cortexr52_3] = "r52_3"
 
 OPENAMP_LOPPER_TARGET = "${@d.getVarFlag('OPENAMP_LOPPER_OUTPUT', d.getVar('ESW_MACHINE') or '') or ''}"
-OPENAMP_LOPPER_REMOTE:armv7r ?= "${OPENAMP_LOPPER_TARGET}"
+OPENAMP_LOPPER_REMOTE:xilinx-standalone ?= "${OPENAMP_LOPPER_TARGET}"
 
-OPENAMP_ROLE:armv7r = "remote"
+OPENAMP_ROLE:xilinx-standalone = "remote"
 OPENAMP_ROLE:linux = "host"
 
 LOP_LINUX_HOST:zynqmp = "psu_cortexa53_0"
@@ -174,21 +156,13 @@ do_run_lopper() {
     fi
 }
 
-do_run_lopper:append:armv7r() {
-    cd ${S}/
-    lopper -O ${S} ${LOPPER_OPENAMP_OUT_DTB} -- baremetallinker_xlnx ${ESW_MACHINE} ${S} openamp
-    mv *Example.cmake ${LINKER_METADATA_FILE}
-    cd -
-}
-
 PACKAGE_ARCH:linux = "${MACHINE_ARCH}"
-COMPATIBLE_HOST:forcevariable = ".*"
 
-do_comple:armv7r() {
-	cmake_runcmake_build --target rpmsg-echo-ping.out matrix_multiply.out rpc_demo.out
-}
+COMPATIBLE_HOST:linux = ".*"
+COMPATIBLE_HOST:xilinx-standalone = ".*-elf"
+COMPATIBLE_HOST:xilinx-standalone:arm = "[^-]*-[^-]*-eabi"
 
-OPENAMP_MACHINE:armv7r = "zynqmp_r5"
+OPENAMP_MACHINE:xilinx-standalone = "zynqmp_r5"
 
 DEPLOY_MACHINE = "${@ d.getVar('MACHINE_ARCH').replace('_','-') }"
 STANDALONE_SHOULD_DEPLOY = "${@'true' if ( 'Standalone' in  d.getVar('DISTRO_NAME') ) else 'false'}" 
