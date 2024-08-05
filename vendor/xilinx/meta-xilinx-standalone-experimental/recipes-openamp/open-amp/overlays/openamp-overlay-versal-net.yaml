@@ -1,35 +1,5 @@
 definitions:
     OpenAMP:
-         openamp_channel1_access_srams: &openamp_channel1_access_srams # used for access in each domain
-             - dev: psx_wizard_0_psxl_0_psx_r52_1a_atcm_global
-               flags: 0
-             - dev: psx_wizard_0_psxl_0_psx_r52_1a_btcm_global
-               flags: 0
-             - dev: psx_wizard_0_psxl_0_psx_r52_1a_ctcm_global
-               flags: 0
-
-
-         rpu1vdev0vring0: &rpu1vdev0vring0
-             - start: 0x3ef40000
-               size: 0x2000
-               no-map: 1
-
-         rproc1: &rproc1
-             - start: 0x3ef00000
-               size: 0x40000
-               no-map: 1
-
-
-         rpu1vdev0vring1: &rpu1vdev0vring1
-             - start: 0x3ef44000
-               size: 0x4000
-               no-map: 1
-
-         rpu1vdev0buffer: &rpu1vdev0buffer
-             - start: 0x3ef48000
-               size: 0x40000
-               no-map: 1
-
          openamp_channel0_access_srams: &openamp_channel0_access_srams # used for access in each domain
              - dev: psx_wizard_0_psxl_0_psx_r52_0a_atcm_global
                flags: 0
@@ -38,29 +8,56 @@ definitions:
              - dev: psx_wizard_0_psxl_0_psx_r52_0a_ctcm_global
                flags: 0
 
-         rpu0vdev0vring0: &rpu0vdev0vring0
-             - start: 0x3ed40000
-               size: 0x2000
-               no-map: 1
+         openamp_channel1_access_srams: &openamp_channel1_access_srams # used for access in each domain
+             - dev: psx_wizard_0_psxl_0_psx_r52_1a_atcm_global
+               flags: 0
+             - dev: psx_wizard_0_psxl_0_psx_r52_1a_btcm_global
+               flags: 0
+             - dev: psx_wizard_0_psxl_0_psx_r52_1a_ctcm_global
+               flags: 0
 
          rproc0: &rproc0
              - start: 0x3ed00000
-               size: 0x40000
+               size: 0x60000
                no-map: 1
 
+         rpu0vdev0vring0: &rpu0vdev0vring0
+             - start: 0x3ed60000
+               size: 0x2000
+               no-map: 1
 
          rpu0vdev0vring1: &rpu0vdev0vring1
-             - start: 0x3ed44000
+             - start: 0x3ed64000
                size: 0x4000
                no-map: 1
 
          rpu0vdev0buffer: &rpu0vdev0buffer
-             - start: 0x3ed48000
+             - start: 0x3ed68000
+               size: 0x40000
+               no-map: 1
+
+         rproc1: &rproc1
+             - start: 0x3ef00000
+               size: 0x60000
+               no-map: 1
+
+         rpu1vdev0vring0: &rpu1vdev0vring0
+             - start: 0x3ef60000
+               size: 0x2000
+               no-map: 1
+
+         rpu1vdev0vring1: &rpu1vdev0vring1
+             - start: 0x3ef64000
+               size: 0x4000
+               no-map: 1
+
+         rpu1vdev0buffer: &rpu1vdev0buffer
+             - start: 0x3ef68000
                size: 0x40000
                no-map: 1
 
 domains:
-    openamp_a78_0_cluster: # host in channel from a72-0 to r5-1 over channel 0
+    openamp_a78_0_cluster: # host in channel from a78-0
         compatible:
             - "openamp,domain-v1"
         cpus:
@@ -70,7 +67,6 @@ domains:
                  secure: true
                  el: 0x3
         access:
-            # if we want to have a list merge, it should be in a list
             - dev:
                 - ipi3
                 - ipi3  # used for Open AMP RPMsg IPC
@@ -82,7 +78,6 @@ domains:
 
         reserved-memory:
             ranges: true
-            # if we want an object / node merge, it should be like this (a map)
             <<+: [ *rpu0vdev0vring1, *rpu0vdev0vring0, *rpu0vdev0buffer, *rproc0, *rpu1vdev0vring1, *rpu1vdev0vring0, *rpu1vdev0buffer, *rproc1 ]
 
         domain-to-domain:
