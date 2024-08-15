@@ -5,7 +5,11 @@ RPROVIDES:${PN}-demos += "open-amp-demos"
 inherit ccmake cmake python3-dir deploy
 
 LOPS_DIR="${RECIPE_SYSROOT_NATIVE}/${PYTHON_SITEPACKAGES_DIR}/lopper/lops/"
+SYSTEM_DTFILE_DEPENDS ??= ""
+OPENAMP_DEPENDS ?= "${SYSTEM_DTFILE_DEPENDS}"
 OPENAMP_DTFILE ?= "${SYSTEM_DTFILE}"
+
+DEPENDS += "${OPENAMP_DEPENDS}"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
