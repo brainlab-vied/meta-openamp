@@ -1,4 +1,4 @@
-PROVIDES:armv7r = " open-amp open-amp-xlnx "
+PROVIDES:arm = " open-amp open-amp-xlnx "
 RPROVIDES:${PN} += "open-amp"
 RPROVIDES:${PN}-demos += "open-amp-demos"
 
@@ -13,7 +13,8 @@ B = "${WORKDIR}/build"
 OECMAKE_SOURCEPATH = "${S}/"
 
 DEPENDS:append = " libmetal python3-pyyaml-native lopper-native python3-dtc-native "
-DEPENDS:append:armv7r = " xiltimer libxil xilstandalone xiltimer  nativesdk-xilinx-lops "
+DEPENDS:append:arm = " xiltimer libxil xilstandalone xiltimer  nativesdk-xilinx-lops "
+
 DEPENDS:append:xilinx-freertos = " freertos10-xilinx "
 
 OPENAMP_WITH_PROXY ?= "OFF"
@@ -26,9 +27,9 @@ OPENAMP_OVERLAY_DEFAULT:versal-net ??= "openamp-overlay-versal-net.yaml"
 OPENAMP_OVERLAY ?= "${OPENAMP_OVERLAY_DEFAULT}"
 SRC_URI:append = "  file://${OPENAMP_OVERLAY} "
 
-OECMAKE_C_LINK_FLAGS:append:armv7r = " --sysroot=${STAGING_DIR_HOST}"
+OECMAKE_C_LINK_FLAGS:append:arm = " --sysroot=${STAGING_DIR_HOST}"
 CFLAGS:append = " -DSDT -D_AMD_GENERATED_ ${DEBUG_PREFIX_MAP} "
-CFLAGS:append:armv7r = " -O3  -DXLNX_PLATFORM \
+CFLAGS:append:arm = " -O3  -DXLNX_PLATFORM \
  -specs=${PKG_CONFIG_SYSROOT_DIR}/usr/include/Xilinx.spec \
  "
 CFLAGS:append:xilinx-freertos = " -DUSE_FREERTOS "
@@ -44,23 +45,27 @@ OPENAMP_CMAKE_SYSTEM_NAME:xilinx-freertos = "FreeRTOS"
 
 LINKER_METADATA_FILE="OpenAMP_Lopper_Linker_Cfg.cmake"
 
+TOOLCHAIN_FILE_MACHINE:armv7r = "zynqmp_r5"
+TOOLCHAIN_FILE_MACHINE:armv8r = "zynqmp_r5"
+TOOLCHAIN_FILE_MACHINE:linux = "${OPENAMP_MACHINE}"
+
 # Generate Lopper linker config file before generating toolchain file
-cmake_do_generate_toolchain_file:append:armv7r() {
+cmake_do_generate_toolchain_file:append:arm() {
     cat >> ${WORKDIR}/toolchain.cmake <<EOF
 	include (CMakeForceCompiler)
 	CMAKE_FORCE_C_COMPILER("${OECMAKE_C_COMPILER}" GNU)
 	set (CMAKE_SYSTEM_PROCESSOR "${TRANSLATED_TARGET_ARCH}" )
 	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ")
-	set (CMAKE_SYSTEM_NAME "${OPENAMP_CMAKE_SYSTEM_NAME}")
-	set (MACHINE               "zynqmp_r5" )
-	set (CMAKE_LIBRARY_PATH    "${PKG_CONFIG_SYSROOT_DIR}/usr/lib" CACHE STRING "")
-	set (CMAKE_INCLUDE_PATH    "${CMAKE_INCLUDE_PATH} ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
-	set (CMAKE_FIND_ROOT_PATH "${CMAKE_FIND_ROOT_PATH} ${STAGING_LIBDIR} ${CMAKE_INCLUDE_PATH} " CACHE STRING "")
-	set (LIBMETAL_INCLUDE_DIR  " ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
-	set (LIBMETAL_LIB_DIR      " ${PKG_CONFIG_SYSROOT_DIR}/usr/lib" CACHE STRING "")
-	set (XIL_INCLUDE_DIR       " ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
-	set (CMAKE_C_FLAGS         " ${CMAKE_C_FLAGS}  ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
-	set (WITH_PROXY            "${OPENAMP_WITH_PROXY}" CACHE STRING "")
+	set (CMAKE_SYSTEM_NAME      "${OPENAMP_CMAKE_SYSTEM_NAME}")
+	set (MACHINE                "${TOOLCHAIN_FILE_MACHINE}" )
+	set (CMAKE_LIBRARY_PATH     "${PKG_CONFIG_SYSROOT_DIR}/usr/lib" CACHE STRING "")
+	set (CMAKE_INCLUDE_PATH     "${CMAKE_INCLUDE_PATH} ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
+	set (CMAKE_FIND_ROOT_PATH   "${CMAKE_FIND_ROOT_PATH} ${STAGING_LIBDIR} ${CMAKE_INCLUDE_PATH} " CACHE STRING "")
+	set (LIBMETAL_INCLUDE_DIR   " ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
+	set (LIBMETAL_LIB_DIR       " ${PKG_CONFIG_SYSROOT_DIR}/usr/lib" CACHE STRING "")
+	set (XIL_INCLUDE_DIR        " ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
+	set (CMAKE_C_FLAGS          " ${CMAKE_C_FLAGS}  ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
+	set (WITH_PROXY             "${OPENAMP_WITH_PROXY}" CACHE STRING "")
 	set_property (GLOBAL PROPERTY HAS_SYSTEM_DT ON)
 	set_property(GLOBAL PROPERTY SOC "${OPENAMP_CMAKE_SOC}")
 	set_property(GLOBAL PROPERTY LINKER_METADATA_FILE ${S}/${LINKER_METADATA_FILE})
@@ -70,11 +75,15 @@ EOF
 do_generate_toolchain_file[postfuncs] += "openamp_toolchain_file_setup"
 LOPPER_GEN_FILE_OUTPUT:linux = "zynqmp"
 LOPPER_GEN_FILE_OUTPUT:armv7r = "zynqmp_r5"
+LOPPER_GEN_FILE_OUTPUT:armv8r = "zynqmp_r5"
+
 openamp_toolchain_file_setup() {
   cp ${WORKDIR}/amd_platform_info.h ${S}/apps/machine/${LOPPER_GEN_FILE_OUTPUT}
 }
 
 OPENAMP_LOPPER_INPUTS:armv7r = ""
+OPENAMP_LOPPER_INPUTS:armv8r = ""
+
 OPENAMP_LOPPER_INPUTS:linux:zynqmp = "            \
     -i ${LOPS_DIR}/lop-gen_domain_dts-invoke.dts  \
     -i ${LOPS_DIR}/lop-a53-imux.dts "
@@ -116,8 +125,10 @@ OPENAMP_LOPPER_OUTPUT[psx_cortexr52_3] = "r52_3"
 
 OPENAMP_LOPPER_TARGET = "${@d.getVarFlag('OPENAMP_LOPPER_OUTPUT', d.getVar('ESW_MACHINE') or '') or ''}"
 OPENAMP_LOPPER_REMOTE:armv7r = "${OPENAMP_LOPPER_TARGET}"
+OPENAMP_LOPPER_REMOTE:armv8r = "${OPENAMP_LOPPER_TARGET}"
 
 OPENAMP_ROLE:armv7r = "remote"
+OPENAMP_ROLE:armv8r = "remote"
 OPENAMP_ROLE:linux = "host"
 
 LOP_LINUX_HOST:zynqmp = "psu_cortexa53_0"
@@ -158,7 +169,7 @@ do_run_lopper() {
     fi
 }
 
-do_run_lopper:append:armv7r() {
+do_run_lopper:append:arm() {
     cd ${S}/
     lopper -O ${S} ${LOPPER_OPENAMP_OUT_DTB} -- baremetallinker_xlnx ${ESW_MACHINE} ${S} openamp
     mv *Example.cmake ${LINKER_METADATA_FILE}
@@ -166,9 +177,9 @@ do_run_lopper:append:armv7r() {
 }
 
 PACKAGE_ARCH:linux = "${MACHINE_ARCH}"
-COMPATIBLE_HOST:forcevariable = ".*"
+COMPATIBLE_HOST:linux = ".*"
+COMPATIBLE_HOST:arm = "[^-]*-[^-]*-eabi"
 
-OPENAMP_MACHINE:armv7r = "zynqmp_r5"
 
 do_deploy() {
 	# remove existing DTB if applicable
@@ -178,20 +189,41 @@ do_deploy() {
 	install -Dm 0644 ${LOPPER_OPENAMP_OUT_DTB} ${DEPLOYDIR}
 }
 
-do_compile:armv7r() {
+do_compile_rpu() {
        cmake_runcmake_build --target rpmsg-echo.out matrix_multiplyd.out rpc_demo.out
 }
 
-do_install:armv7r() {
+do_install_rpu() {
 	install -d ${D}/${bindir}
 	install -m 0755 ${B}/apps/examples/echo/rpmsg-echo.out ${D}/${bindir}
 	install -m 0755 ${B}/apps/examples/matrix_multiply/matrix_multiplyd.out ${D}/${bindir}
 	install -m 0755 ${B}/apps/examples/rpc_demo/rpc_demo.out ${D}/${bindir}
 }
 
-do_deploy:armv7r() {
+do_deploy_rpu() {
 	install -d ${DEPLOYDIR}/
 	install -Dm 0644 ${D}/${bindir}/*.out ${DEPLOYDIR}/
+}
+
+do_compile:armv7r() {
+	do_compile_rpu
+}
+do_compile:armv8r() {
+	do_compile_rpu
+}
+
+do_install:armv7r() {
+	do_install_rpu
+}
+do_install:armv8r() {
+	do_install_rpu
+}
+
+do_deploy:armv7r() {
+	do_deploy_rpu
+}
+do_deploy:armv8r() {
+	do_deploy_rpu
 }
 
 addtask do_deploy before do_build after do_install
@@ -199,4 +231,6 @@ addtask do_run_set_lopper_targets after do_prepare_recipe_sysroot
 addtask do_run_set_lopper_targets after fetch before do_run_lopper
 addtask do_run_lopper after do_run_set_lopper_targets before do_generate_toolchain_file
 FILES:${PN}:append:armv7r = " ${libdir}/*.a ${bindir}/*.out  "
+FILES:${PN}:append:armv8r = " ${libdir}/*.a ${bindir}/*.out  "
+
 FILES:${PN}:append:linux = " ${DEPLOYDIR}${LOPPER_OPENAMP_OUT_DTB} "
