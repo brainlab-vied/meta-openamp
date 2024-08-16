@@ -47,11 +47,8 @@ EXTRA_OECMAKE:armv7r = "\
     "
 
 CFLAGS:append = " -DSDT -DXLNX_PLATFORM "
-OECMAKE_C_LINK_FLAGS:append:xilinx-standalone = " -lxilstandalone -lscugic -lxiltimer -lgcc"
 
 FILES:${PN}:xilinx-standalone:append = " ${libdir}/*.a ${bindir}/*elf "
-
-DEMO_LINK_FLAGS:append:armv7r = " -lxilstandalone -lscugic -lxiltimer"
 
 cmake_do_generate_toolchain_file:append:armv7r() {
     cat >> ${WORKDIR}/toolchain.cmake <<EOF
@@ -72,6 +69,6 @@ cmake_do_generate_toolchain_file:append:armv7r() {
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${PKG_CONFIG_SYSROOT_DIR}/usr/include/   " CACHE STRING "")
     include (cross-${LIBMETAL_GCC_INCLUDE}-gcc)
     set (WITH_DOC OFF)
-    set (DEMO_LINK_FLAGS "${DEMO_LINK_FLAGS}" CACHE STRING "")
+    set_property (GLOBAL PROPERTY HAS_SYSTEM_DT ON)
 EOF
 }

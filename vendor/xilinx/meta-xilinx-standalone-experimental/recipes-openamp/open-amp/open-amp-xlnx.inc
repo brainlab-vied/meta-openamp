@@ -13,7 +13,7 @@ B = "${WORKDIR}/build"
 OECMAKE_SOURCEPATH = "${S}/"
 
 DEPENDS:append = " libmetal python3-pyyaml-native lopper-native python3-dtc-native "
-DEPENDS:append:armv7r = " xiltimer libxil scugic xilstandalone xiltimer  nativesdk-xilinx-lops "
+DEPENDS:append:armv7r = " xiltimer libxil xilstandalone xiltimer  nativesdk-xilinx-lops "
 DEPENDS:append:xilinx-freertos = " freertos10-xilinx "
 
 OPENAMP_WITH_PROXY ?= "OFF"
@@ -26,16 +26,12 @@ OPENAMP_OVERLAY_DEFAULT:versal-net ??= "openamp-overlay-versal-net.yaml"
 OPENAMP_OVERLAY ?= "${OPENAMP_OVERLAY_DEFAULT}"
 SRC_URI:append = "  file://${OPENAMP_OVERLAY} "
 
-OECMAKE_C_LINK_FLAGS:append:armv7r = " --sysroot=${STAGING_DIR_HOST} -lxil -lc -lm -lxilstandalone -lscugic -lxiltimer"
+OECMAKE_C_LINK_FLAGS:append:armv7r = " --sysroot=${STAGING_DIR_HOST}"
 CFLAGS:append = " -DSDT -D_AMD_GENERATED_ ${DEBUG_PREFIX_MAP} "
 CFLAGS:append:armv7r = " -O3  -DXLNX_PLATFORM \
  -specs=${PKG_CONFIG_SYSROOT_DIR}/usr/include/Xilinx.spec \
  "
 CFLAGS:append:xilinx-freertos = " -DUSE_FREERTOS "
-
-DEMO_LINK_FLAGS ?= ""
-DEMO_LINK_FLAGS:armv7r = "-lxil -lc -lm -lxilstandalone -lscugic -lxiltimer"
-DEMO_LINK_FLAGS:append:xilinx-freertos = " -lfreertos"
 
 OPENAMP_CMAKE_SOC = "unknown"
 OPENAMP_CMAKE_SOC:zynqmp = "ZYNQMP"
@@ -64,7 +60,6 @@ cmake_do_generate_toolchain_file:append:armv7r() {
 	set (LIBMETAL_LIB_DIR      " ${PKG_CONFIG_SYSROOT_DIR}/usr/lib" CACHE STRING "")
 	set (XIL_INCLUDE_DIR       " ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
 	set (CMAKE_C_FLAGS         " ${CMAKE_C_FLAGS}  ${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
-	set (DEMO_LINK_FLAGS       "${DEMO_LINK_FLAGS}" CACHE STRING "")
 	set (WITH_PROXY            "${OPENAMP_WITH_PROXY}" CACHE STRING "")
 	set_property (GLOBAL PROPERTY HAS_SYSTEM_DT ON)
 	set_property(GLOBAL PROPERTY SOC "${OPENAMP_CMAKE_SOC}")
@@ -195,8 +190,8 @@ do_install:armv7r() {
 }
 
 do_deploy:armv7r() {
-	install -d ${DEPLOYDIR}/${BPN}/
-	install -Dm 0644 ${D}/${bindir}/*.out ${DEPLOYDIR}/${BPN}/
+	install -d ${DEPLOYDIR}/
+	install -Dm 0644 ${D}/${bindir}/*.out ${DEPLOYDIR}/
 }
 
 addtask do_deploy before do_build after do_install
