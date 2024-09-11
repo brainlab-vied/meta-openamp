@@ -32,7 +32,7 @@ OPENAMP_OVERLAY ?= "${OPENAMP_OVERLAY_DEFAULT}"
 SRC_URI:append = "  file://${OPENAMP_OVERLAY} "
 
 OECMAKE_C_LINK_FLAGS:append:arm = " --sysroot=${STAGING_DIR_HOST}"
-CFLAGS:append = " -DSDT -D_AMD_GENERATED_ ${DEBUG_PREFIX_MAP} "
+CFLAGS:append = " -DSDT -D_AMD_GENERATED_ -DVIRTIO_USE_DCACHE ${DEBUG_PREFIX_MAP} "
 CFLAGS:append:arm = " -O3  -DXLNX_PLATFORM \
  -specs=${PKG_CONFIG_SYSROOT_DIR}/usr/include/Xilinx.spec \
  "
