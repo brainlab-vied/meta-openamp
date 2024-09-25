@@ -257,7 +257,7 @@ do_deploy:armv8r() {
 addtask do_deploy before do_build after do_install
 addtask do_run_set_lopper_targets after do_prepare_recipe_sysroot
 addtask do_run_set_lopper_targets after fetch before do_run_lopper
-addtask do_run_lopper after do_run_set_lopper_targets before do_generate_toolchain_file
+addtask do_run_lopper after do_run_set_lopper_targets do_patch before do_generate_toolchain_file
 FILES:${PN}:append:armv7r = " ${libdir}/*.a ${bindir}/*.out  "
 FILES:${PN}:append:armv8r = " ${libdir}/*.a ${bindir}/*.out  "
 
