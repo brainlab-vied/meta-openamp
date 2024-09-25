@@ -16,11 +16,18 @@ B = "${WORKDIR}/build"
 
 OECMAKE_SOURCEPATH = "${S}/"
 
-DEPENDS:append = " libmetal python3-pyyaml-native lopper-native python3-dtc-native "
-DEPENDS:append:armv7r = " xiltimer libxil xilstandalone xiltimer  nativesdk-xilinx-lops "
-DEPENDS:append:armv8r = " xiltimer libxil xilstandalone xiltimer  nativesdk-xilinx-lops "
+DEPENDS += "libmetal python3-pyyaml-native lopper-native python3-dtc-native"
 
-DEPENDS:append:xilinx-freertos = " freertos10-xilinx "
+DEPENDS_BAREMETAL ??= ""
+DEPENDS_BAREMETAL:armv7r = "xiltimer libxil xilstandalone xiltimer xilinx-lops-native"
+DEPENDS_BAREMETAL:armv8r = "xiltimer libxil xilstandalone xiltimer xilinx-lops-native"
+
+DEPENDS += "${DEPENDS_BAREMETAL}"
+
+DEPENDS_FREERTOS ??= ""
+DEPENDS_FREERTOS:xilinx-freertos = "freertos10-xilinx"
+
+DEPENDS += "${DEPENDS_FREERTOS}"
 
 OPENAMP_WITH_PROXY ?= "OFF"
 
@@ -109,8 +116,6 @@ OPENAMP_LOPPER_INPUTS:linux:versal = "           \
 OPENAMP_LOPPER_INPUTS:linux:versal-net = "       \
     -i ${LOPS_DIR}/lop-gen_domain_dts-invoke.dts \
     -i ${LOPS_DIR}/lop-a78-imux.dts "
-
-do_configure[depends] += " lopper-native:do_install"
 
 # Here set Lopper targets as needed
 
