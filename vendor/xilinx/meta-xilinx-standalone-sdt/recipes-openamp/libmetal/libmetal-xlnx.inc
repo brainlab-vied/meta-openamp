@@ -12,7 +12,7 @@ B:xilinx-freertos = "${WORKDIR}/build"
 OECMAKE_SOURCEPATH:xilinx-freertos = "${S}/"
 PROVIDES:xilinx-freertos = "libmetal"
 
-DEPENDS:armv7r:append = " doxygen-native xilstandalone scugic xiltimer libxil nativesdk-xilinx-lops "
+DEPENDS:armv7r:append = " doxygen-native xilstandalone scugic xiltimer  nativesdk-xilinx-lops "
 DEPENDS:append:xilinx-freertos = " freertos10-xilinx "
 
 DEPENDS:remove:microblaze = " scugic xiltimer "
@@ -23,11 +23,10 @@ COMPATIBLE_HOST:forcevariable = ".*"
 LIBMETAL_CROSS_PREFIX:xilinx-standalone = "${TARGET_PREFIX}"
 LIBMETAL_CROSS_PREFIX:xilinx-freertos = "${TARGET_PREFIX}"
 
-LIBMETAL_MACHINE:armv7r = "zynqmp_r5"
-LIBMETAL_MACHINE:xilinx-standalone:cortexa53 = "zynqmp_a53"
-LIBMETAL_MACHINE:xilinx-standalone:cortexa72 = "zynqmp_a72"
-LIBMETAL_MACHINE:xilinx-standalone:cortexa78 = "zynqmp_a78"
+LIBMETAL_MACHINE:armv7r = "xlnx_r5"
+LIBMETAL_MACHINE:armv8r = "xlnx_r5"
 LIBMETAL_MACHINE:microblaze = "microblaze_generic"
+LIBMETAL_MACHINE:linux = "xlnx"
 
 LIBMETAL_GCC_INCLUDE:xilinx-standalone = "generic"
 LIBMETAL_GCC_INCLUDE:xilinx-freertos = "freertos"
@@ -55,6 +54,7 @@ cmake_do_generate_toolchain_file:append:armv7r() {
     set (CMAKE_SYSTEM_PROCESSOR "${LIBMETAL_CMAKE_SYSTEM_PROCESSOR}" )
     set (CROSS_PREFIX           "${LIBMETAL_CROSS_PREFIX}" CACHE STRING "")
     set (MACHINE "${LIBMETAL_MACHINE}" )
+    set (PROJECT_VENDOR "xlnx")
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ")
     set (CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
     set (CMAKE_SYSTEM_NAME "${LIBMETAL_SYSTEM_NAME}")
