@@ -219,6 +219,10 @@ do_deploy() {
 
 do_compile_rpu() {
        cmake_runcmake_build --target rpmsg-echo.out matrix_multiplyd.out rpc_demo.out
+
+       ${OBJCOPY} -O binary ${B}/apps/examples/echo/rpmsg-echo.out  ${B}/apps/examples/echo/rpmsg-echo.bin
+       ${OBJCOPY} -O binary ${B}/apps/examples/matrix_multiply/matrix_multiplyd.out ${B}/apps/examples/matrix_multiply/matrix_multiplyd.bin
+       ${OBJCOPY} -O binary ${B}/apps/examples/rpc_demo/rpc_demo.out ${B}/apps/examples/rpc_demo/rpc_demo.bin
 }
 
 do_install_rpu() {
@@ -226,11 +230,21 @@ do_install_rpu() {
 	install -m 0755 ${B}/apps/examples/echo/rpmsg-echo.out ${D}/${bindir}
 	install -m 0755 ${B}/apps/examples/matrix_multiply/matrix_multiplyd.out ${D}/${bindir}
 	install -m 0755 ${B}/apps/examples/rpc_demo/rpc_demo.out ${D}/${bindir}
+
+	install -m 0755 ${B}/apps/examples/echo/rpmsg-echo.out ${D}/${bindir}/rpmsg-echo.elf
+	install -m 0755 ${B}/apps/examples/matrix_multiply/matrix_multiplyd.out ${D}/${bindir}/matrix_multiplyd.elf
+	install -m 0755 ${B}/apps/examples/rpc_demo/rpc_demo.out ${D}/${bindir}/rpc_demo.elf
 }
 
 do_deploy_rpu() {
 	install -d ${DEPLOYDIR}/
 	install -Dm 0644 ${D}/${bindir}/*.out ${DEPLOYDIR}/
+	install -Dm 0644 ${D}/${bindir}/*.elf ${DEPLOYDIR}/
+	# below is needed for packaging
+
+	install -m 0644 ${B}/apps/examples/echo/rpmsg-echo.bin ${DEPLOYDIR}/rpmsg-echo.bin
+	install -m 0644 ${B}/apps/examples/matrix_multiply/matrix_multiplyd.bin ${DEPLOYDIR}/matrix_multiplyd.bin
+	install -m 0644 ${B}/apps/examples/rpc_demo/rpc_demo.bin ${DEPLOYDIR}/rpc_demo.bin
 }
 
 do_compile:armv7r() {
@@ -258,7 +272,7 @@ addtask do_deploy before do_build after do_install
 addtask do_run_set_lopper_targets after do_prepare_recipe_sysroot
 addtask do_run_set_lopper_targets after fetch before do_run_lopper
 addtask do_run_lopper after do_run_set_lopper_targets do_patch before do_generate_toolchain_file
-FILES:${PN}:append:armv7r = " ${libdir}/*.a ${bindir}/*.out  "
-FILES:${PN}:append:armv8r = " ${libdir}/*.a ${bindir}/*.out  "
+FILES:${PN}:append:armv7r = " ${libdir}/*.a ${bindir}/*.elf ${bindir}/*bin ${bindir}/*out "
+FILES:${PN}:append:armv8r = " ${libdir}/*.a ${bindir}/*.elf ${bindir}/*bin ${bindir}/*out "
 
 FILES:${PN}:append:linux = " ${DEPLOYDIR}${LOPPER_OPENAMP_OUT_DTB} "
