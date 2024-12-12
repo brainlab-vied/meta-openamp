@@ -1,4 +1,4 @@
-inherit cmake ccmake
+inherit cmake ccmake deploy
 
 S:xilinx-standalone = "${WORKDIR}/git"
 B:xilinx-standalone = "${WORKDIR}/build"
@@ -10,7 +10,7 @@ S:xilinx-freertos = "${WORKDIR}/git"
 B:xilinx-freertos = "${WORKDIR}/build"
 
 OECMAKE_SOURCEPATH:xilinx-freertos = "${S}/"
-PROVIDES:xilinx-freertos = "libmetal"
+PROVIDES:xilinx-freertos = "libmetal-xlnx"
 
 DEPENDS:armv7r:append = " doxygen-native xilstandalone scugic xiltimer  nativesdk-xilinx-lops "
 DEPENDS:append:xilinx-freertos = " freertos10-xilinx "
@@ -28,18 +28,16 @@ LIBMETAL_MACHINE:armv8r = "xlnx_r5"
 LIBMETAL_MACHINE:microblaze = "microblaze_generic"
 LIBMETAL_MACHINE:linux = "xlnx"
 
-LIBMETAL_GCC_INCLUDE:xilinx-standalone = "generic"
-LIBMETAL_GCC_INCLUDE:xilinx-freertos = "freertos"
-
-LIBMETAL_SYSTEM_NAME:xilinx-standalone = "Generic"
-LIBMETAL_SYSTEM_NAME:xilinx-freertos = "FreeRTOS"
+LIBMETAL_SYSTEM_NAME:xilinx-standalone = "generic"
+LIBMETAL_SYSTEM_NAME:xilinx-freertos = "freertos"
+LIBMETAL_SYSTEM_NAME:linux = "linux"
 
 LIBMETAL_CMAKE_SYSTEM_PROCESSOR:xilinx-standalone = "${TRANSLATED_TARGET_ARCH}"
 LIBMETAL_CMAKE_SYSTEM_PROCESSOR:xilinx-freertos = "${TRANSLATED_TARGET_ARCH}"
 
 LIBMETAL_CMAKE_SYSTEM_PROCESSOR:xilinx-standalone:microblaze = "microblaze"
 
-LIBMETAL_DEMO ?= "OFF"
+LIBMETAL_DEMO ?= "ON"
 
 EXTRA_OECMAKE:armv7r = "\
     -DWITH_EXAMPLES=${LIBMETAL_DEMO} \
@@ -47,7 +45,7 @@ EXTRA_OECMAKE:armv7r = "\
 
 CFLAGS:append = " -DSDT -DXLNX_PLATFORM "
 
-FILES:${PN}:xilinx-standalone:append = " ${libdir}/*.a ${bindir}/*elf "
+FILES:${PN}:xilinx-standalone = " ${libdir}/*.a ${bindir}/*elf ${bindir}/*bin "
 
 cmake_do_generate_toolchain_file:append:armv7r() {
     cat >> ${WORKDIR}/toolchain.cmake <<EOF
@@ -67,8 +65,33 @@ cmake_do_generate_toolchain_file:append:armv7r() {
     set (CMAKE_C_ARCHIVE_FINISH   true)
     set (CMAKE_INCLUDE_PATH "${PKG_CONFIG_SYSROOT_DIR}/usr/include/" CACHE STRING "")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${PKG_CONFIG_SYSROOT_DIR}/usr/include/   " CACHE STRING "")
-    include (cross-${LIBMETAL_GCC_INCLUDE}-gcc)
+    include (cross-${LIBMETAL_SYSTEM_NAME}-gcc)
     set (WITH_DOC OFF)
     set_property (GLOBAL PROPERTY HAS_SYSTEM_DT ON)
 EOF
 }
+
+do_compile:append:armv7r() {
+    ${OBJCOPY} -O binary ${B}/examples/system/${LIBMETAL_SYSTEM_NAME}/${LIBMETAL_MACHINE}/amp_demo/metal.elf  \
+    ${B}/examples/system/${LIBMETAL_SYSTEM_NAME}/${LIBMETAL_MACHINE}/amp_demo/libmetal-demo.bin
+}
+do_install:append:armv7r() {
+    install -d ${D}/${bindir}
+    install -d ${D}/${libdir}
+
+    install -m 0755 ${B}/lib/libmetal.a ${D}/${libdir}
+    install -m 0755 ${B}/examples/system/${LIBMETAL_SYSTEM_NAME}/${LIBMETAL_MACHINE}/amp_demo/metal.elf ${D}/${bindir}/
+    install -m 0755 ${B}/examples/system/${LIBMETAL_SYSTEM_NAME}/${LIBMETAL_MACHINE}/amp_demo/libmetal-demo.bin ${D}/${bindir}/
+}
+do_deploy() {
+        install -d ${DEPLOYDIR}/
+        install -Dm 0644 ${D}/${bindir}/*.elf ${DEPLOYDIR}/
+	install -Dm 0644 ${D}/${bindir}/*.bin ${DEPLOYDIR}/
+	install -Dm 0644 ${D}/${libdir}/*.a ${DEPLOYDIR}/
+}
+do_deploy:linux() {
+}
+
+addtask do_deploy after do_install
+FILES:${PN}:append:armv7r = " ${libdir}/*.a ${bindir}/*.elf ${bindir}/*bin "
+FILES:${PN}:append:armv8r = " ${libdir}/*.a ${bindir}/*.elf ${bindir}/*bin "
