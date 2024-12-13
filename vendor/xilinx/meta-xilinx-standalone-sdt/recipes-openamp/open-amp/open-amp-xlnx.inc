@@ -81,11 +81,22 @@ LOPPER_GEN_FILE_OUTPUT:armv7r = "zynqmp_r5"
 LOPPER_GEN_FILE_OUTPUT:armv8r = "zynqmp_r5"
 
 OPENAMP_CFG_HEADER = "${CONFIG_DTFILE_DIR}/amd_platform_info.h"
+OPENAMP_CFG_HEADER:linux = ""
 
 openamp_toolchain_file_setup() {
-  cp ${OPENAMP_CFG_HEADER} ${S}/apps/machine/${LOPPER_GEN_FILE_OUTPUT}
+  if [ -n "${OPENAMP_CFG_HEADER}" ]; then
+    if [ ! -e "${OPENAMP_CFG_HEADER}" ]; then
+       bberror "${OPENAMP_CFG_HEADER} is not present, we can't continue"
+       exit 1
+    fi
+    cp ${OPENAMP_CFG_HEADER} ${S}/apps/machine/${LOPPER_GEN_FILE_OUTPUT}
+  fi
 }
-openamp_toolchain_file_setup:linux() {
+
+python() {
+    cfg_header = d.getVar('OPENAMP_CFG_HEADER')
+    if cfg_header and not os.path.exists(cfg_header):
+        raise bb.parse.SkipRecipe('Expected configuration file (%s) does not exist.' % (cfg_header))
 }
 
 FW_MACHINEzynqmp = "cortexr5-0"
