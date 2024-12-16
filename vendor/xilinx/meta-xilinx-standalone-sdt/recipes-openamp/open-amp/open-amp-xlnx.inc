@@ -99,7 +99,7 @@ python() {
         raise bb.parse.SkipRecipe('Expected configuration file (%s) does not exist.' % (cfg_header))
 }
 
-FW_MACHINEzynqmp = "cortexr5-0"
+FW_MACHINE:zynqmp = "cortexr5-0"
 FW_MACHINE:versal = "cortexr5-0"
 FW_MACHINE:versal-net = "cortexr52-0"
 FW_OS ?= "baremetal"
