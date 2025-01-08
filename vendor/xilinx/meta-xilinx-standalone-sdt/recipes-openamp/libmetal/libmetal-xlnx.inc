@@ -10,7 +10,7 @@ S:xilinx-freertos = "${WORKDIR}/git"
 B:xilinx-freertos = "${WORKDIR}/build"
 
 OECMAKE_SOURCEPATH:xilinx-freertos = "${S}/"
-PROVIDES:xilinx-freertos = "libmetal-xlnx"
+PROVIDES:xilinx-freertos = "libmetal libmetal-xlnx"
 
 DEPENDS:armv7r:append = " doxygen-native xilstandalone scugic xiltimer  nativesdk-xilinx-lops "
 DEPENDS:append:xilinx-freertos = " freertos10-xilinx "
@@ -55,7 +55,7 @@ cmake_do_generate_toolchain_file:append:armv7r() {
     set (PROJECT_VENDOR "xlnx")
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ")
     set (CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
-    set (CMAKE_SYSTEM_NAME "${LIBMETAL_SYSTEM_NAME}")
+    set (CMAKE_SYSTEM_NAME "${LIBMETAL_SYSTEM_NAME}" CACHE STRING "" FORCE)
     set (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER CACHE STRING "")
     set (CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER CACHE STRING "")
     set (CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER CACHE STRING "")
