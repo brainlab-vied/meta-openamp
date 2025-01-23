@@ -35,8 +35,9 @@ OPENAMP_CMAKE_SYSTEM_NAME:xilinx-freertos = "FreeRTOS"
 OPENAMP_CMAKE_SYSTEM_NAME:linux = "Linux"
 
 PACKAGE_ARCH:linux = "${MACHINE_ARCH}"
-COMPATIBLE_HOST:linux = ".*"
-COMPATIBLE_HOST:arm = "[^-]*-[^-]*-eabi"
+COMPATIBLE_HOST = ".*"
+COMPATIBLE_HOST:armv7r = "[^-]*-[^-]*-eabi"
+COMPATIBLE_HOST:armv8r = "[^-]*-[^-]*-eabi"
 
 OPENAMP_CMAKE_SOC = "unknown"
 OPENAMP_CMAKE_SOC:zynqmp = "ZYNQMP"
