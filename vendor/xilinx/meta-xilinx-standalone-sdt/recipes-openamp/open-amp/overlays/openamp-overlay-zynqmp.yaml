@@ -84,12 +84,8 @@ domains:
                     - openamp_r5_0_cluster
                     - openamp_r5_1_cluster
                 elfload:
-                    - psu_r5_0_atcm_global
-                    - psu_r5_0_btcm_global
-                    - rproc0
-                    - psu_r5_1_atcm_global
-                    - psu_r5_1_btcm_global
-                    - rproc1
+                    - [ psu_r5_0_atcm_global, psu_r5_0_btcm_global, rproc0 ]
+                    - [ psu_r5_1_atcm_global, psu_r5_1_btcm_global, rproc1 ]
 
             rpmsg-relation:
                 compatible: openamp,rpmsg-v1
