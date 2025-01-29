@@ -102,7 +102,7 @@ LOPPER_GEN_FILE_OUTPUT:armv8r = "zynqmp_r5"
 FW_MACHINE:zynqmp = "cortexr5-0"
 FW_MACHINE:versal = "cortexr5-0"
 FW_MACHINE:versal-net = "cortexr52-0"
-FW_OS ?= "baremetal"
+FW_OS ?= "freertos"
 FW_TARGET ?= "${MACHINE}-${FW_MACHINE}-${FW_OS}"
 
 OPENAMP_CFG_HEADER = "${CONFIG_DTFILE_DIR}/openamp-${SOC_FAMILY}-${FW_MACHINE}-${FW_OS}.h"
