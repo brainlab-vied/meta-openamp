@@ -102,7 +102,14 @@ LOPPER_GEN_FILE_OUTPUT:armv8r = "zynqmp_r5"
 FW_MACHINE:zynqmp = "cortexr5-0"
 FW_MACHINE:versal = "cortexr5-0"
 FW_MACHINE:versal-net = "cortexr52-0"
-FW_OS ?= "freertos"
+FW_OS ?= "${MCNAME}"
+SUPPORTED_OS_LIST = "baremetal freertos"
+BBCLASSEXTEND = "${@' '.join(['mcextend:'+x for x in d.getVar('SUPPORTED_OS_LIST').split()])}"
+python () {
+    if not d.getVar("MCNAME"):
+        raise bb.parse.SkipRecipe("No class extension set, %s is supported" % d.getVar('SUPPORTED_OS_LIST'))
+}
+
 FW_TARGET ?= "${MACHINE}-${FW_MACHINE}-${FW_OS}"
 
 OPENAMP_CFG_HEADER = "${CONFIG_DTFILE_DIR}/openamp-${SOC_FAMILY}-${FW_MACHINE}-${FW_OS}.h"
