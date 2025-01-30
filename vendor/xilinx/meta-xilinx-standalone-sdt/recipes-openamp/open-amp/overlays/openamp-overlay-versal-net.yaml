@@ -83,7 +83,7 @@ domains:
         domain-to-domain:
             compatible: openamp,domain-to-domain-v1
             remoteproc-relation:
-                compatible: openamp,remoteproc-v1
+                compatible: openamp,remoteproc-v2
                 remote:
                     - openamp_r52_0_cluster
                     - openamp_r52_1_cluster
