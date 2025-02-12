@@ -95,7 +95,6 @@ cmake_do_generate_toolchain_file:append:arm() {
 EOF
 }
 
-do_generate_toolchain_file[postfuncs] += "openamp_toolchain_file_setup"
 LOPPER_GEN_FILE_OUTPUT:armv7r = "zynqmp_r5"
 LOPPER_GEN_FILE_OUTPUT:armv8r = "zynqmp_r5"
 
@@ -112,50 +111,42 @@ python () {
 
 FW_TARGET ?= "${MACHINE}-${FW_MACHINE}-${FW_OS}"
 
-OPENAMP_CFG_HEADER = "${CONFIG_DTFILE_DIR}/openamp-${SOC_FAMILY}-${FW_MACHINE}-${FW_OS}.h"
+OPENAMP_CFG_HEADER = "${S}/machine/${LOPPER_GEN_FILE_OUTPUT}/amd_platform_info.h"
 OPENAMP_CFG_HEADER:linux = ""
-
-LOPPER_INPUT_DT = "${CONFIG_DTFILE_DIR}/${FW_TARGET}_openamp.dts"
 
 # no apps for linux build. this is handled by rpmsg-example recipes
 do_configure:linux[noexec] = "1"
 do_compile:linux[noexec] = "1"
-do_configure[depends] += " lopper-native:do_install libxil:do_install xilstandalone:do_install "
+do_configure[depends] += " lopper-native:do_install libxil:do_install xilstandalone:do_install lopper-native:do_populate_sysroot dtc-native:do_populate_sysroot "
 
 addtask do_deploy before do_build after do_install
 
-openamp_toolchain_file_setup() {
-  if [ -n "${OPENAMP_CFG_HEADER}" ]; then
-    if [ ! -e "${OPENAMP_CFG_HEADER}" ]; then
-       bberror "${OPENAMP_CFG_HEADER} is not present, we can't continue"
-       exit 1
+do_configure:prepend() {
+    export LOPPER_DTC_FLAGS="-b 0 -@"
+
+    cd ${S}/machine/${LOPPER_GEN_FILE_OUTPUT}
+    lopper -O -f -v --enhanced  --permissive \
+      -O . ${CONFIG_DTFILE} -- openamp --openamp_header_only \
+      --openamp_output_filename=amd_platform_info.h \
+      --openamp_remote=${ESW_MACHINE}
+    cd -
+
+    if [ -n "${OPENAMP_CFG_HEADER}" ]; then
+        if [ ! -e "${OPENAMP_CFG_HEADER}" ]; then
+           bberror "${OPENAMP_CFG_HEADER} is not present, we can't continue"
+           exit 1
+        fi
     fi
-    cp ${OPENAMP_CFG_HEADER} ${S}/machine/${LOPPER_GEN_FILE_OUTPUT}/amd_platform_info.h
-  fi
 
-  sed -i -e 's/CXX//g' ${S}/cmake/vitis.cmake
-  sed -i -e '/find_package(common)/d' ${S}/cmake/vitis.cmake
-  touch ${S}/UserConfig.cmake
+    cd ${S}/
+    lopper -O ${S} ${CONFIG_DTFILE} -- baremetallinker_xlnx ${ESW_MACHINE} ${S} openamp
+    mv *Example.cmake ${LINKER_METADATA_FILE}
+    cd -
+
+    sed -i -e 's/CXX//g' ${S}/cmake/vitis.cmake
+    sed -i -e '/find_package(common)/d' ${S}/cmake/vitis.cmake
+    touch ${S}/UserConfig.cmake
 }
-
-python() {
-    cfg_header = d.getVar('OPENAMP_CFG_HEADER')
-    if cfg_header and not os.path.exists(cfg_header):
-        raise bb.parse.SkipRecipe('Expected configuration file (%s) does not exist.' % (cfg_header))
-}
-
-do_gen_linker() {
-     export LOPPER_DTC_FLAGS="-b 0 -@"
-
-     cd ${S}/
-     lopper -O ${S} ${LOPPER_INPUT_DT} -- baremetallinker_xlnx ${ESW_MACHINE} ${S} openamp
-     mv *Example.cmake ${LINKER_METADATA_FILE}
-     cd -
-}
-do_gen_linker:linux() {
-}
-
-do_gen_linker[depends] = " lopper-native:do_populate_sysroot dtc-native:do_populate_sysroot "
 
 do_compile_rpu() {
         cmake_runcmake_build 
@@ -197,6 +188,5 @@ do_deploy:armv8r() {
 }
 
 addtask do_deploy before do_build after do_install
-addtask do_gen_linker before do_configure after do_generate_toolchain_file
 FILES:${PN}:append:armv7r = " ${libdir}/*.a ${bindir}/*.elf ${bindir}/*bin ${bindir}/*out "
 FILES:${PN}:append:armv8r = " ${libdir}/*.a ${bindir}/*.elf ${bindir}/*bin ${bindir}/*out "
