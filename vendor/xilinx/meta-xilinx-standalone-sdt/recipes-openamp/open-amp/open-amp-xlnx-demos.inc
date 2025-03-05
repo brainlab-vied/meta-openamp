@@ -27,7 +27,8 @@ CFLAGS:append = " -DSDT -D_AMD_GENERATED_ ${DEBUG_PREFIX_MAP} "
 CFLAGS:append:arm = " -O3  -DXLNX_PLATFORM \
  -specs=${PKG_CONFIG_SYSROOT_DIR}/usr/include/Xilinx.spec \
  "
-CFLAGS:append:xilinx-freertos = " -DUSE_FREERTOS "
+
+CFLAGS:append = " ${ESW_CFLAGS} "
 
 OPENAMP_CMAKE_SYSTEM_NAME = "unknown"
 OPENAMP_CMAKE_SYSTEM_NAME:xilinx-standalone = "Generic"
