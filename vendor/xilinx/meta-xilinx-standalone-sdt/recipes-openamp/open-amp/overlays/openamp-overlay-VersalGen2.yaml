@@ -1,11 +1,11 @@
 definitions:
     OpenAMP:
          openamp_channel_0_access_srams: &openamp_channel_0_access_srams # used for access in each domain
-             - dev: ps_wizard_0_ps11_0_r52_0a_atcm_global
+             - dev: r52_0a_atcm_global
                flags: 0
-             - dev: ps_wizard_0_ps11_0_r52_0a_btcm_global
+             - dev: r52_0a_btcm_global
                flags: 0
-             - dev: ps_wizard_0_ps11_0_r52_0a_ctcm_global
+             - dev: r52_0a_ctcm_global
                flags: 0
 
          rproc0: &rproc0
@@ -29,11 +29,11 @@ definitions:
                no-map: 1
 
          openamp_channel_1_access_srams: &openamp_channel_1_access_srams # used for access in each domain
-             - dev: ps_wizard_0_ps11_0_r52_1a_atcm_global
+             - dev: r52_1a_atcm_global
                flags: 0
-             - dev: ps_wizard_0_ps11_0_r52_1a_btcm_global
+             - dev: r52_1a_btcm_global
                flags: 0
-             - dev: ps_wizard_0_ps11_0_r52_1a_ctcm_global
+             - dev: r52_1a_ctcm_global
                flags: 0
 
          rproc1: &rproc1
@@ -90,8 +90,8 @@ domains:
                     - openamp_r52_0_cluster
                     - openamp_r52_1_cluster
                 elfload:
-                    - [ ps_wizard_0_ps11_0_r52_0a_atcm_global, ps_wizard_0_ps11_0_r52_0a_btcm_global, ps_wizard_0_ps11_0_r52_0a_ctcm_global, rproc0 ]
-                    - [ ps_wizard_0_ps11_0_r52_1a_atcm_global, ps_wizard_0_ps11_0_r52_1a_btcm_global, ps_wizard_0_ps11_0_r52_1a_ctcm_global, rproc1 ]
+                    - [ r52_0a_atcm_global, r52_0a_btcm_global, r52_0a_ctcm_global, rproc0 ]
+                    - [ r52_1a_atcm_global, r52_1a_btcm_global, r52_1a_ctcm_global, rproc1 ]
 
             rpmsg-relation:
                 compatible: openamp,rpmsg-v1
